@@ -58,37 +58,12 @@ public class AutonomousMecanumDrive extends LinearOpMode {
 
         //de cate ori trebuie sa se roteasca rotile pentru a parcurge 20 cm
         //distantape care o parcurgi cu o roata este circumferinta ei
+        double distance = 20;
         double circumference = 3.14 * 10; //pi*diametru
-        double rotationsNeeded = 20/circumference;
+        double rotationsNeeded = distance/circumference;
         int encoderDrivingTarget = (int)(rotationsNeeded * 383.6); //rotatii * tick_counts
 
-        leftFrontMotor.setTargetPosition(encoderDrivingTarget);
-        rightFrontMotor.setTargetPosition(encoderDrivingTarget);
-        leftBackMotor.setTargetPosition(encoderDrivingTarget);
-        rightBackMotor.setTargetPosition(encoderDrivingTarget);
-
-        leftFrontMotor.setPower(1);
-        rightFrontMotor.setPower(1);
-        leftBackMotor.setPower(1);
-        rightBackMotor.setPower(1);
-
-        //setam motoarele sa mearga pana la o anumita pozitie
-        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftBackMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightBackMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        while(leftFrontMotor.isBusy() || rightFrontMotor.isBusy() || leftBackMotor.isBusy() || rightBackMotor.isBusy())
-        {
-            //in principiu nu facem nimic dar printez pe ecran ce se intampla pentru un eventual debug
-            telemetry.addData("Path", "Driving 20 cm");
-            telemetry.update();
-        }
-
-        leftFrontMotor.setPower(0);
-        rightFrontMotor.setPower(0);
-        leftBackMotor.setPower(0);
-        rightBackMotor.setPower(0);
+        forward(encoderDrivingTarget);
 
         //facem o rotatie de 15 grade
         rotate(15,power);
@@ -210,4 +185,72 @@ public class AutonomousMecanumDrive extends LinearOpMode {
 
         resetAngle();
     }
+
+    private void forward(int target)
+    {
+        leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBackMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBackMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftFrontMotor.setTargetPosition(target);
+        rightFrontMotor.setTargetPosition(target);
+        leftBackMotor.setTargetPosition(target);
+        rightBackMotor.setTargetPosition(target);
+
+        leftFrontMotor.setPower(1);
+        rightFrontMotor.setPower(1);
+        leftBackMotor.setPower(1);
+        rightBackMotor.setPower(1);
+
+        //setam motoarele sa mearga pana la o anumita pozitie
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBackMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBackMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        while(leftFrontMotor.isBusy() || rightFrontMotor.isBusy() || leftBackMotor.isBusy() || rightBackMotor.isBusy())
+        {
+        }
+
+        leftFrontMotor.setPower(0);
+        rightFrontMotor.setPower(0);
+        leftBackMotor.setPower(0);
+        rightBackMotor.setPower(0);
+    }
+
+    private void back(int target)
+    {
+        leftFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFrontMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBackMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBackMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftFrontMotor.setTargetPosition(target);
+        rightFrontMotor.setTargetPosition(target);
+        leftBackMotor.setTargetPosition(target);
+        rightBackMotor.setTargetPosition(target);
+
+        leftFrontMotor.setPower(-1);
+        rightFrontMotor.setPower(-1);
+        leftBackMotor.setPower(-1);
+        rightBackMotor.setPower(-1);
+
+        //setam motoarele sa mearga pana la o anumita pozitie
+        leftFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFrontMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBackMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBackMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        while(leftFrontMotor.isBusy() || rightFrontMotor.isBusy() || leftBackMotor.isBusy() || rightBackMotor.isBusy())
+        {
+        }
+
+        leftFrontMotor.setPower(0);
+        rightFrontMotor.setPower(0);
+        leftBackMotor.setPower(0);
+        rightBackMotor.setPower(0);
+    }
+
+
 }
