@@ -10,6 +10,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @Autonomous(name="AutonomousMecanumDrive", group="Linear Opmode")
 // @Disabled
@@ -23,6 +26,8 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
     BNO055IMU               imu;
     Orientation             lastAngles = new Orientation();
     double                  globalAngle, power = 1, correction;
+    private DistanceSensor sensorRange;
+    double cmtowall = 10;
 
     @Override
     public void runOpMode() {
@@ -45,6 +50,8 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
 
         imu.initialize(parameters);
 
+        sensorRange = hardwareMap.get(DistanceSensor.class, "sensor_range");
+
         waitForStart();
 
         //de cate ori trebuie sa se roteasca rotile pentru a parcurge 20 cm
@@ -55,6 +62,13 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
         int encoderDrivingTarget = (int)(rotationsNeeded * 383.6); //rotatii * tick_counts
 
         runWithEncoders(encoderDrivingTarget,1,1);
+
+        full(1,1);
+        if(sensorRange.getDistance(DistanceUnit.CM) < cmtowall)
+        {
+            full(0,0);
+        }
+
 
         //facem o rotatie la 15 grade
         rotateTo(15);
@@ -183,7 +197,7 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
     {
         stopResetEncoders();
         setTarget(target);
-        full(1,1);
+        full(i,j);
         runToPos();
         checkIsBusy();
     }
