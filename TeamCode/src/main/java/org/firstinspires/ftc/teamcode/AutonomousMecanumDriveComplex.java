@@ -1,10 +1,19 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Pair;
+
+import java.util.Queue;
+import java.util.LinkedList;
+import java.lang.Object;
+import java.util.concurrent.TimeUnit;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.ElapsedTime.Resolution;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -13,6 +22,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
+import static java.lang.Math.abs;
 
 @Autonomous(name="AutonomousMecanumDrive", group="Linear Opmode")
 // @Disabled
@@ -28,6 +39,7 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
     double                  globalAngle, power = 1, correction;
     private DistanceSensor sensorRange;
     double cmtowall = 10;
+    double eps = 1.e-14;
 
     @Override
     public void runOpMode() {
@@ -149,7 +161,7 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
             telemetry.addData("Error", "%f", error);
             telemetry.update();
 
-            if(Math.abs(error) <= MAX_ERROR && arrived == false){
+            if(abs(error) <= MAX_ERROR && arrived == false){
                 arrived = true;
             }
         }
@@ -199,18 +211,53 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
 
     private void runUntilWallLessThan(double cmtowall)
     {
+        ElapsedTime mRuntime = new ElapsedTime();
+        mRuntime.reset();
+        Queue<Pair<Double,Double>> q = new LinkedList<>();
+        double firstgood,lastgood;
+        double wait = 10; //milliseconds you want to stay there
+        firstgood = 0;
+        lastgood = 0;
+        double sum = 0;
         double error = sensorRange.getDistance(DistanceUnit.CM) - cmtowall;
-        double lastError = 0;
+        double lastError = 0,tlastError = 0;
         double motorpower;
-        while(error>0)
+        double P = 35, I = 5, D = 70;
+        while(firstgood-lastgood < wait)
         {
-            double P = 35,
-                    I = 5,
-                    D = 70;
-            motorpower = P * error + I * error + lastError + D * (error-lastError);
+            error = sensorRange.getDistance(DistanceUnit.CM) - cmtowall;
+            double sec = mRuntime.milliseconds();
+            if(abs(error) < eps)
+                if(firstgood == 0)
+                    firstgood = sec;
+                else
+                    lastgood = sec;
+            else
+            {
+                firstgood = 0;
+                lastgood = 0;
+            }
+
+            Pair<Double, Double> x = new Pair<>(error, sec);
+            if(q.size() < 10)
+            {
+                q.add(x);
+                sum += x.first;
+            }
+            else
+            {
+                if(sec - q.peek().second > wait)
+                {
+                    sum -= q.peek().first;
+                    q.remove();
+                    sum += x.first;
+                    q.add(x);
+                }
+            }
+            motorpower = P * error + I * sum + D * (error-lastError)*(sec - tlastError);
             full(motorpower,motorpower);
             lastError = error;
-            error = sensorRange.getDistance(DistanceUnit.CM) - cmtowall;
+            tlastError = sec;
         }
     }
 }
