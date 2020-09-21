@@ -63,11 +63,7 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
 
         runWithEncoders(encoderDrivingTarget,1,1);
 
-        full(1,1);
-        if(sensorRange.getDistance(DistanceUnit.CM) < cmtowall)
-        {
-            full(0,0);
-        }
+        runUntilWallLessThan(cmtowall);
 
 
         //facem o rotatie la 15 grade
@@ -129,10 +125,6 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
         front(i, j);
     }
 
-    private final double P = 35,
-            I = 5,
-            D = 70;
-
     private final double MAX_ERROR = 5;
 
     private void rotateTo(double direction) {
@@ -140,6 +132,9 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
         double error  = direction - angle;
         double lastError = error;
         boolean arrived = false;
+        double P = 35,
+                I = 5,
+                D = 70;
         while (opModeIsActive() && arrived == false){
             //PID
             double  motorCorrection = (((P * error) + (I * (error + lastError)) + D * (error - lastError))) / 100;
@@ -202,4 +197,20 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
         checkIsBusy();
     }
 
+    private void runUntilWallLessThan(double cmtowall)
+    {
+        double error = sensorRange.getDistance(DistanceUnit.CM) - cmtowall;
+        double lastError = 0;
+        double motorpower;
+        while(error>0)
+        {
+            double P = 35,
+                    I = 5,
+                    D = 70;
+            motorpower = P * error + I * error + lastError + D * (error-lastError);
+            full(motorpower,motorpower);
+            lastError = error;
+            error = sensorRange.getDistance(DistanceUnit.CM) - cmtowall;
+        }
+    }
 }
