@@ -239,30 +239,12 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
             }
 
             Pair<Double, Double> x = new Pair<>(error, sec);
-            if(q.size() < 10)
+            q.add(x);
+            sum += x.first;
+            while(sec - q.peek().second > wait)
             {
-                q.add(x);
-                sum += x.first;
-            }
-            else
-            {
-                if(sec - q.peek().second > wait)
-                {
-                    sum -= q.peek().first;
-                    q.remove();
-                    sum += x.first;
-                    q.add(x);
-                }
-                while(sec - q.peek().second > wait)
-                {
-                    sum -= q.peek().first;
-                    q.remove();
-                    error = sensorRange.getDistance(DistanceUnit.CM) - cmtowall;
-                    sec = mRuntime.milliseconds();
-                    Pair<Double, Double> y = new Pair<>(error, sec);
-                    sum += y.first;
-                    q.add(y);
-                }
+                sum -= q.peek().first;
+                q.remove();
             }
             motorpower = P * error + I * sum + D * (error-lastError)*(sec - tlastError);
             full(motorpower,motorpower);
