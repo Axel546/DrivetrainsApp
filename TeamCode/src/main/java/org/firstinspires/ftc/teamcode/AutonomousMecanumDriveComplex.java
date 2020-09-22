@@ -139,34 +139,47 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
 
     private final double MAX_ERROR = 5;
 
-    private void rotateTo(double direction) {
+    private void rotateTo(double direction)
+    {
+        ElapsedTime mRuntime = new ElapsedTime();
+        mRuntime.reset();
+        Queue<Pair<Double, Double>> q = new LinkedList<>();
+        double firstgood, lastgood;
+        double wait = 10; //milliseconds you want to stay there
+        firstgood = 0;
+        lastgood = 0;
         double angle = getAngle();
-        double error  = direction - angle;
-        double lastError = error;
-        boolean arrived = false;
-        double P = 35,
-                I = 5,
-                D = 70;
-        while (opModeIsActive() && arrived == false){
-            //PID
-            double  motorCorrection = (((P * error) + (I * (error + lastError)) + D * (error - lastError))) / 100;
-
-            full(- motorCorrection, motorCorrection);
-
-            lastError = error;
-            angle = getAngle();
-            error = direction - angle;
-
-            telemetry.addData("Angle", "%f", angle);
-            telemetry.addData("Error", "%f", error);
-            telemetry.update();
-
-            if(abs(error) <= MAX_ERROR && arrived == false){
-                arrived = true;
+        double error = direction - angle;
+        double lastError = 0, tlastError = 0;
+        double motorpower;
+        double sum = 0;
+        double P = 35, I = 5, D = 70;
+        while (firstgood - lastgood < wait)
+        {
+            error = direction - getAngle();
+            double sec = mRuntime.milliseconds();
+            if (abs(error) < eps)
+                if (firstgood == 0)
+                    firstgood = sec;
+                else
+                    lastgood = sec;
+            else {
+                firstgood = 0;
+                lastgood = 0;
             }
-        }
 
-        telemetry.update();
+            Pair<Double, Double> x = new Pair<>(error, sec);
+            q.add(x);
+            sum += x.first;
+            while (sec - q.peek().second > wait) {
+                sum -= q.peek().first;
+                q.remove();
+            }
+            motorpower = P * error + I * sum + D * (error - lastError) * (sec - tlastError);
+            full(-motorpower, motorpower);
+            lastError = error;
+            tlastError = sec;
+        }
     }
 
     private void stopResetEncoders()
