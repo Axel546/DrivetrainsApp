@@ -265,4 +265,82 @@ public class AutonomousMecanumDriveComplex extends LinearOpMode {
             tlastError = sec;
         }
     }
+
+    private void runRotateUntilLessThan(double cmtowall, double direction)
+    {
+        ElapsedTime mRuntime = new ElapsedTime();
+        mRuntime.reset();
+        Queue<Pair<Double,Double>> q = new LinkedList<>();
+        double firstgood,lastgood;
+        double wait = 10; //milliseconds you want to stay there
+        firstgood = 0;
+        lastgood = 0;
+        double sum = 0;
+        double error = sensorRange.getDistance(DistanceUnit.CM) - cmtowall;
+        double lastError = 0,tlastError = 0;
+        double motorpower;
+        double P = 35, I = 5, D = 70;
+        ElapsedTime mRuntime1 = new ElapsedTime();
+        mRuntime.reset();
+        Queue<Pair<Double, Double>> q1 = new LinkedList<>();
+        double firstgood1, lastgood1;
+        double wait1 = 10; //milliseconds you want to stay there
+        firstgood1 = 0;
+        lastgood1 = 0;
+        double angle = getAngle();
+        double error1 = direction - angle;
+        double lastError1 = 0, tlastError1 = 0;
+        double motorpower1;
+        double sum1 = 0;
+        while(firstgood-lastgood < wait && firstgood1 - lastgood1 < wait1)
+        {
+            error = sensorRange.getDistance(DistanceUnit.CM) - cmtowall;
+            double sec = mRuntime.milliseconds();
+            if(abs(error) < eps)
+                if(firstgood == 0)
+                    firstgood = sec;
+                else
+                    lastgood = sec;
+            else
+            {
+                firstgood = 0;
+                lastgood = 0;
+            }
+            error1 = direction - getAngle();
+            double sec1 = mRuntime1.milliseconds();
+            if (abs(error1) < eps)
+                if (firstgood1 == 0)
+                    firstgood1 = sec1;
+                else
+                    lastgood1 = sec1;
+            else {
+                firstgood1 = 0;
+                lastgood1 = 0;
+            }
+
+            Pair<Double, Double> x = new Pair<>(error, sec);
+            q.add(x);
+            sum += x.first;
+            while(sec - q.peek().second > wait)
+            {
+                sum -= q.peek().first;
+                q.remove();
+            }
+            Pair<Double, Double> x1 = new Pair<>(error1, sec1);
+            q1.add(x1);
+            sum1 += x1.first;
+            while (sec1 - q1.peek().second > wait1) {
+                sum1 -= q1.peek().first;
+                q1.remove();
+            }
+
+            motorpower = P * error + I * sum + D * (error-lastError)*(sec - tlastError);
+            motorpower1 = P * error1 + I * sum1 + D * (error1 - lastError1) * (sec1 - tlastError1);
+            full(motorpower - motorpower1, motorpower + motorpower1);
+            lastError = error;
+            tlastError = sec;
+            lastError1 = error1;
+            tlastError1 = sec1;
+        }
+    }
 }
